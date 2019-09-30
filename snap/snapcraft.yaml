@@ -1,0 +1,59 @@
+name: javafx-xdg-open-snap
+version: '0.1.0'
+summary: A test for opening browser in a snap using JavaFX
+description: https://bugs.launchpad.net/snapd/+bug/1831992
+
+grade: stable
+confinement: strict
+base: core18
+
+parts:
+  javafx-xdg-open-snap:
+    plugin: maven
+    source: https://github.com/astonbitecode/javafx-xdg-open-snap.git
+    override-build: |
+      mvn clean install
+    build-packages:
+      - openjdk-11-jdk
+      - openssl
+      - libssl-dev
+      - libxcb-shape0
+      - libxcb-shape0-dev
+      - libxcb-xfixes0
+      - libxcb-xfixes0-dev
+    stage-packages:
+      - openjdk-11-jdk
+      - libssl1.0.0
+      - libxcb-shape0
+      - libxcb-xfixes0
+      - libxcb-render0
+    organize:
+      ../build/j4rs: opt/j4rs
+      ../build/rust/target/release/rust-keylock-ui: bin/
+  desktop-glib-only:
+    build-packages:
+      - libglib2.0-dev
+    plugin: make
+    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
+    source-subdir: glib-only
+    stage-packages:
+      - libglib2.0-bin
+  env:
+    plugin: nil
+    after:
+      - rust-keylock-ui-all
+      - desktop-glib-only
+apps:
+  rust-keylock-ui:
+    command: desktop-launch $SNAP/bin/rust-keylock-ui
+    plugs:
+      - desktop
+      - desktop-legacy
+      - x11
+      - opengl
+      - network
+      - wayland
+    environment:
+      RKL_J4RS_INST_DIR: ${SNAP}/opt/j4rs
+      JAVA_HOME: ${SNAP}/usr/lib/jvm/java-11-openjdk-${SNAP_ARCH}
+      RUST_KEYLOCK_UI_JAVA_USER_HOME: ${HOME}
