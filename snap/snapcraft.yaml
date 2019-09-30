@@ -15,37 +15,45 @@ parts:
       mvn clean install
     build-packages:
       - openjdk-11-jdk
-      - openssl
-      - libssl-dev
-      - libxcb-shape0
-      - libxcb-shape0-dev
-      - libxcb-xfixes0
-      - libxcb-xfixes0-dev
+      - maven
     stage-packages:
       - openjdk-11-jdk
-      - libssl1.0.0
-      - libxcb-shape0
-      - libxcb-xfixes0
-      - libxcb-render0
+      - maven
     organize:
-      ../build/j4rs: opt/j4rs
-      ../build/rust/target/release/rust-keylock-ui: bin/
-  desktop-glib-only:
-    build-packages:
-      - libglib2.0-dev
-    plugin: make
+      ../build/target: opt/javafx-xdg-open-snap/target
+  gtk3:
     source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
-    source-subdir: glib-only
+    source-subdir: gtk
+    plugin: make
+    make-parameters: ["FLAVOR=gtk3"]
+    build-packages:
+      - libgtk-3-dev
     stage-packages:
+      - libxkbcommon0  # XKB_CONFIG_ROOT
+      - ttf-ubuntu-font-family
+      - dmz-cursor-theme
+      - light-themes
+      - adwaita-icon-theme
+      - gnome-themes-standard
+      - shared-mime-info
+      - libgtk-3-0
+      - libgdk-pixbuf2.0-0
       - libglib2.0-bin
+      - libgtk-3-bin
+      - unity-gtk3-module
+      - libappindicator3-1
+      - locales-all
+      - xdg-user-dirs
+      - ibus-gtk3
+      - libibus-1.0-5
   env:
     plugin: nil
     after:
-      - rust-keylock-ui-all
-      - desktop-glib-only
+      - javafx-xdg-open-snap
+      - gtk3
 apps:
-  rust-keylock-ui:
-    command: desktop-launch $SNAP/bin/rust-keylock-ui
+  javafx-xdg-open-snap:
+    command: java --module-path $TARGET_PATH/lib --add-modules javafx.base,javafx.controls,javafx.graphics -Duser.home=${HOME} -jar $TARGET_PATH/javafx-xdg-open-snap-0.1.0-SNAPSHOT.jar
     plugs:
       - desktop
       - desktop-legacy
@@ -54,6 +62,6 @@ apps:
       - network
       - wayland
     environment:
-      RKL_J4RS_INST_DIR: ${SNAP}/opt/j4rs
       JAVA_HOME: ${SNAP}/usr/lib/jvm/java-11-openjdk-${SNAP_ARCH}
-      RUST_KEYLOCK_UI_JAVA_USER_HOME: ${HOME}
+      TARGET_PATH: ${SNAP}/opt/javafx-xdg-open-snap/target
+      PATH: ${JAVA_HOME}/bin:${PATH}
